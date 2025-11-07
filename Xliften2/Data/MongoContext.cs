@@ -18,7 +18,7 @@ namespace Xliften.Data
         {
             // Læs connection string og database-navn fra appsettings.json
             Client = new MongoClient(configuration["MongoSettings:ConnectionString"]);
-            Database = Client.GetDatabase(configuration["MongoSettings:XliftenDb"]);
+            Database = Client.GetDatabase(configuration["MongoSettings:DatabaseName"]);
 
             // GridFS-bucket til videoer – samme navn som i resten af projektet
             VideosBucket = new GridFSBucket(Database, new GridFSBucketOptions

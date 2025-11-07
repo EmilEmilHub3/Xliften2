@@ -17,8 +17,9 @@ namespace Xliften
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Tilføj controllers, hvis du bruger dem andre steder
-            builder.Services.AddControllers();
+            // 🔹 Swagger + endpoint explorer
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
             // 🔹 Registrér MongoContext som singleton
             builder.Services.AddSingleton<MongoContext>();
@@ -28,15 +29,28 @@ namespace Xliften
 
             var app = builder.Build();
 
+            // 🔹 Swagger i development
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            // (valgfrit) HTTPS-redirect hvis du vil
+            // app.UseHttpsRedirection();
+
             // 🔹 Kør seeding én gang ved opstart (genbruger MongoContext)
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<MongoContext>();
-                VideoSeeder.SeedAsync(context).GetAwaiter().GetResult();
+                VideoSeeder
+                    .SeedAsync(context)
+                    .GetAwaiter()
+                    .GetResult();
             }
 
-            // (Valgfrit) Static files som din lærer viser, hvis du har mappen "StaticFiles"
-            /*
+            //(Valgfrit) Static files som din lærer viser, hvis du har mappen "StaticFiles"
+            
             app.UseFileServer(new FileServerOptions
             {
                 FileProvider = new PhysicalFileProvider(
@@ -44,10 +58,10 @@ namespace Xliften
                 RequestPath = "/StaticFiles",
                 EnableDefaultFiles = true
             });
-            */
+            
 
-            // Map controllers, hvis du har dem
-            app.MapControllers();
+            // 🔹 Lille test-endpoint til at se om API kører
+            app.MapGet("/", () => "Xliften API is running 🚀");
 
             // 🔹 Dine video-endpoints (de filer du har sendt)
             app.MapVideoEndpoints();
