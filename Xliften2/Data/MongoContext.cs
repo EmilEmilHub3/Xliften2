@@ -2,7 +2,7 @@
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 
-namespace Xliften.Data
+namespace Xliften2.Data
 {
     /// <summary>
     /// Samlet context til MongoDB-connection, database og GridFS-bucket.

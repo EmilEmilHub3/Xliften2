@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
-using Xliften.Data;
-using Xliften.Models;
-using Xliften2.repositories;
+using Xliften2.Data;
+using Xliften2.Models;
+using Xliften2.Repositories;
 
-namespace Xliften.Services
+namespace Xliften2.Repositories
 {
     /// <summary>
     /// Service til at læse video-filer fra MongoDB GridFS.

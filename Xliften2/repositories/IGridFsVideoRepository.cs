@@ -1,6 +1,6 @@
-﻿using Xliften.Models;
+﻿using Xliften2.Models;
 
-namespace Xliften2.repositories
+namespace Xliften2.Repositories
 {
     public interface IGridFsVideoRepository
     {

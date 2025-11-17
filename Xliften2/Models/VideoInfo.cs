@@ -1,4 +1,4 @@
-﻿namespace Xliften.Models
+﻿namespace Xliften2.Models
 {
     /// <summary>
     /// Simple DTO for returning video metadata from the API.

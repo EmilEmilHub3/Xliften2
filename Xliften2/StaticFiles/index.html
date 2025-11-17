@@ -4,72 +4,146 @@
     <meta charset="utf-8" />
     <title>Movie Vault</title>
     <link href="SimpleStyle.css" rel="stylesheet" />
+
     <script>
+        let jwtToken = null;
+
         document.addEventListener('DOMContentLoaded', async function () {
 
-            const select = document.getElementById('movielist');
+            // -----------------------------
+            // LOGIN HANDLING
+            // -----------------------------
+            document.getElementById("btnLogin").onclick = async () => {
 
-            // Hent liste fra GET /videos
-            try {
-                const response = await fetch('/videos');
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
+
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
                 if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
+                    alert("Login failed.");
+                    return;
                 }
 
-                const data = await response.json(); // [{id, title}, ...]
+                const data = await response.json();
+                jwtToken = data.token;        // store in JS memory
+                localStorage.setItem("jwt", jwtToken); // also store persistently
 
+                alert("Login successful!");
+
+                // Load movies after login
+                await loadVideos();
+            };
+
+
+            // -----------------------------
+            // LOAD VIDEO LIST (requires token)
+            // -----------------------------
+            async function loadVideos() {
+
+                jwtToken = localStorage.getItem("jwt");
+
+                if (!jwtToken) {
+                    alert("You must login first.");
+                    return;
+                }
+
+                const response = await fetch("/videos", {
+                    headers: {
+                        "Authorization": "Bearer " + jwtToken
+                    }
+                });
+
+                if (!response.ok) {
+                    alert("Could not load videos. Unauthorized?");
+                    return;
+                }
+
+                const data = await response.json();
+                const select = document.getElementById('movielist');
                 select.innerHTML = '';
 
                 data.forEach(v => {
                     const opt = document.createElement('option');
-                    opt.value = v.id;       // ObjectId
-                    opt.innerHTML = v.title; // filnavn
+                    opt.value = v.id;
+                    opt.innerHTML = v.title;
                     select.appendChild(opt);
                 });
-            } catch (err) {
-                console.error('Unable to get movies.', err);
-                alert('Kunne ikke hente videoer fra API’et.');
             }
 
-            // Når man klikker på knappen
+
+            // -----------------------------
+            // WATCH A VIDEO
+            // -----------------------------
             document.getElementById("btnWatchMovie").onclick = () => {
-                const selectList = document.getElementById("movielist");
-                const id = selectList.value;
+
+                const id = document.getElementById("movielist").value;
+
                 if (!id) {
-                    alert('Vælg en video først.');
+                    alert("Choose a video first.");
+                    return;
+                }
+
+                jwtToken = localStorage.getItem("jwt");
+                if (!jwtToken) {
+                    alert("Please login first.");
                     return;
                 }
 
                 const player = document.getElementById("videoPlayer");
-                player.src = '/video/' + encodeURIComponent(id);
+
+                // Video streaming using Authorization header is not possible with <video>
+                // So we forward the token using a custom query string
+                player.src = "/video/" + encodeURIComponent(id) + "?token=" + encodeURIComponent(jwtToken);
+
                 player.play().catch(e => console.error(e));
             };
+
         });
     </script>
-
 </head>
-<body>''
 
+<body>
 
     <div class="container">
-        <div class="itemSpan2">
-            <H1>The video vault</H1>
+
+        <h1>The Video Vault</h1>
+
+        <!-- --------------------- -->
+        <!-- LOGIN SECTION -->
+        <!-- --------------------- -->
+        <div style="margin-bottom: 20px;">
+            <h2>Login</h2>
+            <input type="text" placeholder="username" id="username" />
+            <input type="password" placeholder="password" id="password" />
+            <button id="btnLogin">Login</button>
         </div>
+
+        <!-- --------------------- -->
+        <!-- MOVIE LIST -->
+        <!-- --------------------- -->
         <div>
-            <select id="movielist">
-            </select>
+            <select id="movielist"></select>
         </div>
+
         <div>
             <button class="button button1" id="btnWatchMovie">Watch movie</button>
         </div>
-        <div class="itemSpan2">
 
-            <video id="videoPlayer" width="650" autoplay>
+        <!-- --------------------- -->
+        <!-- VIDEO PLAYER -->
+        <!-- --------------------- -->
+        <div class="itemSpan2">
+            <video id="videoPlayer" width="650" controls autoplay>
                 <source type="video/mp4" />
             </video>
         </div>
+
     </div>
 
-        <!-- src="http://localhost:5091/api/movie/get"  muted="muted"-->
 </body>
 </html>

@@ -1,15 +1,18 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.IO;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.FileProviders;
-using System.IO;
-using Xliften.Data;
-using Xliften.Endpoints;
-using Xliften.Seeding;
-using Xliften.Services;
-using Xliften2.repositories;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using Xliften2.Auth;
+using Xliften2.Data;
+using Xliften2.Endpoints;
+using Xliften2.Seeding;
+using Xliften2.Repositories; // dit repository namespace
 
-namespace Xliften
+namespace Xliften2
 {
     public class Program
     {
@@ -17,40 +20,71 @@ namespace Xliften
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 🔹 Swagger + endpoint explorer
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // 🔹 Registrér MongoContext som singleton
+            // MongoContext + Repository
             builder.Services.AddSingleton<MongoContext>();
-
-            // 🔹 Registrér din video-service
             builder.Services.AddSingleton<IGridFsVideoRepository, GridFsVideoRepository>();
+
+            // JWT Settings fra appsettings.json
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+            // Token service
+            builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+            // Authentication
+            builder.Services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    var jwtSection = builder.Configuration.GetSection("JwtSettings");
+                    var issuer = jwtSection["Issuer"];
+                    var audience = jwtSection["Audience"];
+                    var signingKey = jwtSection["SigningKey"];
+
+                    // Validate configuration early to avoid cryptic exceptions (e.g. Encoding.GetBytes(null))
+                    if (string.IsNullOrWhiteSpace(signingKey))
+                    {
+                        throw new InvalidOperationException("JwtSettings:SigningKey is missing or empty in appsettings.json (or env configuration).");
+                    }
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = issuer,
+                        ValidateAudience = true,
+                        ValidAudience = audience,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                        ValidateLifetime = true
+                    };
+                });
+
+            // Authorization
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
-            // 🔹 Swagger i development
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            // (valgfrit) HTTPS-redirect hvis du vil
-            // app.UseHttpsRedirection();
+            // ⛔ VIGTIGT: AUTH MIDDLEWARE
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-            // 🔹 Kør seeding én gang ved opstart (genbruger MongoContext)
+            // Seeding
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<MongoContext>();
-                VideoSeeder
-                    .SeedAsync(context)
-                    .GetAwaiter()
-                    .GetResult();
+                VideoSeeder.SeedAsync(context).GetAwaiter().GetResult();
             }
 
-            //(Valgfrit) Static files som din lærer viser, hvis du har mappen "StaticFiles"
-            
+            // Static files
             app.UseFileServer(new FileServerOptions
             {
                 FileProvider = new PhysicalFileProvider(
@@ -58,12 +92,14 @@ namespace Xliften
                 RequestPath = "/StaticFiles",
                 EnableDefaultFiles = true
             });
-            
 
-            // 🔹 Lille test-endpoint til at se om API kører
+            // Test endpoint
             app.MapGet("/", () => "Xliften API is running 🚀");
 
-            // 🔹 Dine video-endpoints (de filer du har sendt)
+            // Auth endpoints (login)
+            app.MapAuthEndpoints();
+
+            // Video endpoints (RequireAuthorization inde i endpoints-filen)
             app.MapVideoEndpoints();
 
             app.Run();
