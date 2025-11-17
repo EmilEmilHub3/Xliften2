@@ -7,15 +7,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Xliften2.Auth
 {
-   
 
     public class JwtTokenService : IJwtTokenService
     {
         private readonly JwtSettings _settings;
 
-        public JwtTokenService(IOptions<JwtSettings> options)
+        public JwtTokenService(IOptions<JwtSettings> settings)
         {
-            _settings = options.Value;
+            _settings = settings.Value;
         }
 
         public string GenerateToken(string username, string role)

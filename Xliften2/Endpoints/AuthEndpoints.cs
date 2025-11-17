@@ -1,39 +1,30 @@
-﻿using Xliften2.Auth;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Builder;
+using MongoDB.Driver;
+using Xliften2.Auth;
 using Xliften2.Models;
+using Xliften2.Data;
 
 namespace Xliften2.Endpoints
 {
-    
     public static class AuthEndpoints
     {
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
-            // POST /login  -> returns JWT if username/password are valid
-            app.MapPost("/login", (LoginRequest request, IJwtTokenService tokenService) =>
+            app.MapPost("/login", async (LoginRequest req, MongoContext db, IJwtTokenService tokenService) =>
             {
-                // SUPER SIMPLE: hardcoded user for the assignment.
-                // You can change this to check MongoDB or something later.
-                if (request.Username == "student" && request.Password == "password123")
-                {
-                    var token = tokenService.GenerateToken(request.Username, "Student");
+                var user = await db.Users
+                    .Find(u => u.Username == req.Username && u.Password == req.Password)
+                    .FirstOrDefaultAsync();
 
-                    return Results.Ok(new
-                    {
-                        token
-                    });
-                }
+                if (user == null)
+                    return Results.Unauthorized();
 
-                return Results.Unauthorized();
+                var token = tokenService.GenerateToken(user.Username, user.Role);
+                return Results.Ok(new { token });
             })
-            .WithName("Login")
-            .WithSummary("Gets a JWT token for a valid user.")
-            .WithDescription("Send username/password and receive a JWT token for calling protected endpoints.")
             .AllowAnonymous();
 
             return app;
         }
     }
 }
-

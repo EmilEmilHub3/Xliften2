@@ -1,18 +1,14 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Xliften2.Auth;
 using Xliften2.Data;
 using Xliften2.Endpoints;
+using Xliften2.Repositories;
 using Xliften2.Seeding;
-using Xliften2.Repositories; // dit repository namespace
 
-namespace Xliften2
+namespace Xliften
 {
     public class Program
     {
@@ -24,83 +20,70 @@ namespace Xliften2
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // MongoContext + Repository
+            // Mongo
             builder.Services.AddSingleton<MongoContext>();
             builder.Services.AddSingleton<IGridFsVideoRepository, GridFsVideoRepository>();
 
-            // JWT Settings fra appsettings.json
+            // JWT settings
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
-            // Token service
             builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-            // Authentication
+            // Authentication + Authorization
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    var jwtSection = builder.Configuration.GetSection("JwtSettings");
-                    var issuer = jwtSection["Issuer"];
-                    var audience = jwtSection["Audience"];
-                    var signingKey = jwtSection["SigningKey"];
-
-                    // Validate configuration early to avoid cryptic exceptions (e.g. Encoding.GetBytes(null))
-                    if (string.IsNullOrWhiteSpace(signingKey))
-                    {
-                        throw new InvalidOperationException("JwtSettings:SigningKey is missing or empty in appsettings.json (or env configuration).");
-                    }
-
+                    var cfg = builder.Configuration.GetSection("JwtSettings");
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
-                        ValidIssuer = issuer,
+                        ValidIssuer = cfg["Issuer"],
                         ValidateAudience = true,
-                        ValidAudience = audience,
+                        ValidAudience = cfg["Audience"],
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["SigningKey"])),
                         ValidateLifetime = true
                     };
                 });
 
-            // Authorization
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
+            // Swagger
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            // ⛔ VIGTIGT: AUTH MIDDLEWARE
+            // Middleware
             app.UseAuthentication();
             app.UseAuthorization();
 
             // Seeding
             using (var scope = app.Services.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<MongoContext>();
-                VideoSeeder.SeedAsync(context).GetAwaiter().GetResult();
+                var db = scope.ServiceProvider.GetRequiredService<MongoContext>();
+                UserSeeder.SeedAdminAsync(db).Wait();
+                VideoSeeder.SeedAsync(db).Wait();
             }
 
-            // Static files
+            // Static files – peg på mappen "StaticFiles"
+            var staticFilesPath = Path.Combine(builder.Environment.ContentRootPath, "StaticFiles");
+
             app.UseFileServer(new FileServerOptions
             {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles")),
-                RequestPath = "/StaticFiles",
-                EnableDefaultFiles = true
+                FileProvider = new PhysicalFileProvider(staticFilesPath),
+                RequestPath = "/StaticFiles",      // URL-prefix
+                EnableDefaultFiles = true          // så /StaticFiles loader index.html automatisk
             });
 
-            // Test endpoint
-            app.MapGet("/", () => "Xliften API is running 🚀");
-
-            // Auth endpoints (login)
+            // Endpoints
             app.MapAuthEndpoints();
-
-            // Video endpoints (RequireAuthorization inde i endpoints-filen)
             app.MapVideoEndpoints();
+
+            app.MapGet("/", () => "Xliften API running");
 
             app.Run();
         }

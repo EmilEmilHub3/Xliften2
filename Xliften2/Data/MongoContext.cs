@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
+using Xliften2.Models;
 
 namespace Xliften2.Data
 {
@@ -13,6 +14,9 @@ namespace Xliften2.Data
         public IMongoClient Client { get; }
         public IMongoDatabase Database { get; }
         public IGridFSBucket VideosBucket { get; }
+
+        public IMongoCollection<User> Users
+    => Database.GetCollection<User>("users");
 
         public MongoContext(IConfiguration configuration)
         {

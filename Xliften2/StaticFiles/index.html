@@ -30,12 +30,11 @@
                 }
 
                 const data = await response.json();
-                jwtToken = data.token;        // store in JS memory
-                localStorage.setItem("jwt", jwtToken); // also store persistently
+                jwtToken = data.token;
+                localStorage.setItem("jwt", jwtToken);
 
                 alert("Login successful!");
 
-                // Load movies after login
                 await loadVideos();
             };
 
@@ -88,23 +87,14 @@
                     return;
                 }
 
-                jwtToken = localStorage.getItem("jwt");
-                if (!jwtToken) {
-                    alert("Please login first.");
-                    return;
-                }
-
                 const player = document.getElementById("videoPlayer");
-
-                // Video streaming using Authorization header is not possible with <video>
-                // So we forward the token using a custom query string
-                player.src = "/video/" + encodeURIComponent(id) + "?token=" + encodeURIComponent(jwtToken);
-
+                player.src = "/video/" + encodeURIComponent(id);
                 player.play().catch(e => console.error(e));
             };
 
         });
     </script>
+
 </head>
 
 <body>
@@ -113,9 +103,7 @@
 
         <h1>The Video Vault</h1>
 
-        <!-- --------------------- -->
-        <!-- LOGIN SECTION -->
-        <!-- --------------------- -->
+        <!-- LOGIN -->
         <div style="margin-bottom: 20px;">
             <h2>Login</h2>
             <input type="text" placeholder="username" id="username" />
@@ -123,9 +111,7 @@
             <button id="btnLogin">Login</button>
         </div>
 
-        <!-- --------------------- -->
-        <!-- MOVIE LIST -->
-        <!-- --------------------- -->
+        <!-- VIDEO LIST -->
         <div>
             <select id="movielist"></select>
         </div>
@@ -134,9 +120,7 @@
             <button class="button button1" id="btnWatchMovie">Watch movie</button>
         </div>
 
-        <!-- --------------------- -->
         <!-- VIDEO PLAYER -->
-        <!-- --------------------- -->
         <div class="itemSpan2">
             <video id="videoPlayer" width="650" controls autoplay>
                 <source type="video/mp4" />

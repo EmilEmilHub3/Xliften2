@@ -1,26 +1,20 @@
 ﻿using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Xliften2.Repositories;
 
 namespace Xliften2.Endpoints
 {
-    /// <summary>
-    /// Endpoint-layer for video-relaterede endpoints i Xliften (Minimal API).
-    /// </summary>
     public static class VideoEndpoints
     {
-        /// <summary>
-        /// Registrerer video-endpoints på app'en.
-        /// </summary>
         public static IEndpointRouteBuilder MapVideoEndpoints(this IEndpointRouteBuilder app)
         {
-            app.MapGet("/video/{id}", async (string id, IGridFsVideoRepository videoRepository) =>
+            // ÅBENT streaming-endpoint (skal kunne kaldes direkte fra <video>-taget)
+            app.MapGet("/video/{id}", async (string id, IGridFsVideoRepository repo) =>
             {
                 try
                 {
-                    var (stream, contentType) = await videoRepository.GetVideoByIdAsync(id);
+                    var (stream, contentType) = await repo.GetVideoByIdAsync(id);
                     return Results.File(stream, contentType);
                 }
                 catch (FileNotFoundException)
@@ -28,14 +22,14 @@ namespace Xliften2.Endpoints
                     return Results.NotFound($"No video found with id {id}");
                 }
             })
-            .RequireAuthorization()
             .WithName("StreamVideo")
             .WithSummary("Streamer en video direkte fra MongoDB GridFS.")
             .WithDescription("Brug ObjectId fra fs.files collection som id for at streame videoen.");
 
-            app.MapGet("/videos", async (IGridFsVideoRepository videoRepository) =>
+            // BESKYTTET liste over videoer (kræver JWT-token)
+            app.MapGet("/videos", async (IGridFsVideoRepository repo) =>
             {
-                var videos = await videoRepository.GetAllVideosAsync();
+                var videos = await repo.GetAllVideosAsync();
                 return Results.Ok(videos);
             })
             .RequireAuthorization()
@@ -47,4 +41,3 @@ namespace Xliften2.Endpoints
         }
     }
 }
-
