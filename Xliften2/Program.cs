@@ -7,7 +7,7 @@ using Xliften.Data;
 using Xliften.Endpoints;
 using Xliften.Seeding;
 using Xliften.Services;
-using Xliften.Services.ServiceInterfaces;
+using Xliften2.repositories;
 
 namespace Xliften
 {
@@ -25,7 +25,7 @@ namespace Xliften
             builder.Services.AddSingleton<MongoContext>();
 
             // 🔹 Registrér din video-service
-            builder.Services.AddSingleton<IGridFsVideoService, GridFsVideoService>();
+            builder.Services.AddSingleton<IGridFsVideoRepository, GridFsVideoRepository>();
 
             var app = builder.Build();
 

@@ -6,19 +6,19 @@ using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using Xliften.Data;
 using Xliften.Models;
-using Xliften.Services.ServiceInterfaces;
+using Xliften2.repositories;
 
 namespace Xliften.Services
 {
     /// <summary>
     /// Service til at læse video-filer fra MongoDB GridFS.
     /// </summary>
-    public class GridFsVideoService : IGridFsVideoService
+    public class GridFsVideoRepository : IGridFsVideoRepository
     {
         private readonly IGridFSBucket _bucket;
 
         // ÆNDRING: nu får den MongoContext i stedet for IConfiguration
-        public GridFsVideoService(MongoContext context)
+        public GridFsVideoRepository(MongoContext context)
         {
             // Brug den fælles bucket fra context
             _bucket = context.VideosBucket;

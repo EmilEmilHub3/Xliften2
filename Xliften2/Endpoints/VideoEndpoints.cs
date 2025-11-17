@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Xliften.Services.ServiceInterfaces;
+using Xliften2.repositories;
 
 namespace Xliften.Endpoints
 {
@@ -17,7 +17,7 @@ namespace Xliften.Endpoints
         public static IEndpointRouteBuilder MapVideoEndpoints(this IEndpointRouteBuilder app)
         {
             // GET /video/{id}  -> streamer én video
-            app.MapGet("/video/{id}", async (string id, IGridFsVideoService videoService) =>
+            app.MapGet("/video/{id}", async (string id, IGridFsVideoRepository videoService) =>
             {
                 try
                 {
@@ -34,7 +34,7 @@ namespace Xliften.Endpoints
             .WithDescription("Brug ObjectId fra fs.files collection som id for at streame videoen.");
 
             // GET /videos  -> returnerer liste af videoer (id + title)
-            app.MapGet("/videos", async (IGridFsVideoService videoService) =>
+            app.MapGet("/videos", async (IGridFsVideoRepository videoService) =>
             {
                 var videos = await videoService.GetAllVideosAsync();
                 return Results.Ok(videos);

@@ -1,8 +1,8 @@
 ﻿using Xliften.Models;
 
-namespace Xliften.Services.ServiceInterfaces
+namespace Xliften2.repositories
 {
-    public interface IGridFsVideoService
+    public interface IGridFsVideoRepository
     {
         Task<(Stream Stream, string ContentType)> GetVideoByIdAsync(string fileId);
         Task<IReadOnlyList<VideoInfo>> GetAllVideosAsync();
