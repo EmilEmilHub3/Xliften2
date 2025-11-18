@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using MongoDB.Driver;
 using Xliften2.Auth;
-using Xliften2.Models;
 using Xliften2.Data;
+using Xliften2.Models;
+using Xliften2.Repositories;
 
 namespace Xliften2.Endpoints
 {
@@ -10,11 +11,9 @@ namespace Xliften2.Endpoints
     {
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
-            app.MapPost("/login", async (LoginRequest req, MongoContext db, IJwtTokenService tokenService) =>
+            app.MapPost("/login", async (LoginRequestDTO req, IAuthRepository authRepo, IJwtTokenService tokenService) =>
             {
-                var user = await db.Users
-                    .Find(u => u.Username == req.Username && u.Password == req.Password)
-                    .FirstOrDefaultAsync();
+                var user = await authRepo.AuthenticateAsync(req.Username, req.Password);
 
                 if (user == null)
                     return Results.Unauthorized();

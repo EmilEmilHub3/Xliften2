@@ -78,8 +78,7 @@
             // -----------------------------
             // WATCH A VIDEO
             // -----------------------------
-            document.getElementById("btnWatchMovie").onclick = () => {
-
+            document.getElementById("btnWatchMovie").onclick = async () => {
                 const id = document.getElementById("movielist").value;
 
                 if (!id) {
@@ -87,10 +86,38 @@
                     return;
                 }
 
-                const player = document.getElementById("videoPlayer");
-                player.src = "/video/" + encodeURIComponent(id);
-                player.play().catch(e => console.error(e));
+                const token = localStorage.getItem("jwt");
+                if (!token) {
+                    alert("Not logged in.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/video/" + encodeURIComponent(id), {
+                        headers: { "Authorization": "Bearer " + token }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Could not download video. Status " + response.status);
+                    }
+
+                    // Convert HTTP response into a BLOB
+                    const blob = await response.blob();
+
+                    // Create a temporary local URL
+                    const videoUrl = URL.createObjectURL(blob);
+
+                    // Assign to player
+                    const player = document.getElementById("videoPlayer");
+                    player.src = videoUrl;
+                    player.play();
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error while loading video.");
+                }
             };
+
 
         });
     </script>

@@ -24,6 +24,9 @@ namespace Xliften
             builder.Services.AddSingleton<MongoContext>();
             builder.Services.AddSingleton<IGridFsVideoRepository, GridFsVideoRepository>();
 
+            // Auth repository (for /login)
+            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
             // JWT settings
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();

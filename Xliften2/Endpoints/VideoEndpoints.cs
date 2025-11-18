@@ -22,6 +22,7 @@ namespace Xliften2.Endpoints
                     return Results.NotFound($"No video found with id {id}");
                 }
             })
+            .RequireAuthorization()
             .WithName("StreamVideo")
             .WithSummary("Streamer en video direkte fra MongoDB GridFS.")
             .WithDescription("Brug ObjectId fra fs.files collection som id for at streame videoen.");
