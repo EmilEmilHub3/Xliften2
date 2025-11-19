@@ -8,7 +8,7 @@ using Xliften2.Endpoints;
 using Xliften2.Repositories;
 using Xliften2.Seeding;
 
-namespace Xliften
+namespace Xliften2
 {
     public class Program
     {
@@ -31,6 +31,16 @@ namespace Xliften
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
+            // 🚨 CORS – DEV MODE: tillad ALT (så vi er sikre det ikke er CORS der blokerer)
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+            });
+
             // Authentication + Authorization
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -44,7 +54,9 @@ namespace Xliften
                         ValidateAudience = true,
                         ValidAudience = cfg["Audience"],
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["SigningKey"])),
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(cfg["SigningKey"])
+                        ),
                         ValidateLifetime = true
                     };
                 });
@@ -60,11 +72,13 @@ namespace Xliften
                 app.UseSwaggerUI();
             }
 
-            // Middleware
+            // 🔹 Brug CORS FØR auth/authorization
+            app.UseCors();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Seeding
+            // Seed admin-bruger og videoer
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<MongoContext>();
@@ -78,13 +92,13 @@ namespace Xliften
             app.UseFileServer(new FileServerOptions
             {
                 FileProvider = new PhysicalFileProvider(staticFilesPath),
-                RequestPath = "/StaticFiles",      // URL-prefix
-                EnableDefaultFiles = true          // så /StaticFiles loader index.html automatisk
+                RequestPath = "/StaticFiles",
+                EnableDefaultFiles = true
             });
 
             // Endpoints
-            app.MapAuthEndpoints();
-            app.MapVideoEndpoints();
+            app.MapAuthEndpoints();   // /login
+            app.MapVideoEndpoints();  // /videos + /video/{id}
 
             app.MapGet("/", () => "Xliften API running");
 

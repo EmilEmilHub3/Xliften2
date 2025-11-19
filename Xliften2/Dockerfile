@@ -1,10 +1,9 @@
 # BUILD-STAGE: bygger din .NET app
-# Skift 8.0 til 7.0 hvis dit projekt er net7.0
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Kopiér projektfil(en) og restore
-COPY *.csproj ./
+# Kopiér projektfil og restore
+COPY Xliften2.csproj ./
 RUN dotnet restore
 
 # Kopiér resten af koden
@@ -24,5 +23,5 @@ COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-# Entrypoint til at køre appen
+# Din dll hedder Xliften2.dll (samme navn som csproj)
 ENTRYPOINT ["dotnet", "Xliften2.dll"]

@@ -21,7 +21,7 @@ services:
       - MongoSettings__DatabaseName=XliftenDB
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "5000:8080"
+      - "5000:8080"   # API: http://localhost:5000
 
   frontend:
     image: nginx:alpine
@@ -29,7 +29,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:80"
+      - "3000:80"     # Frontend: http://localhost:3000
     volumes:
       # Mapper din StaticFiles-mappe ind som Nginx document root
       - ./StaticFiles:/usr/share/nginx/html:ro
