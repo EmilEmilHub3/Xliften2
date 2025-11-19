@@ -16,12 +16,11 @@ services:
     depends_on:
       - mongo
     environment:
-      # Matcher dine MongoSettings i appsettings.json
       - MongoSettings__ConnectionString=mongodb://mongo:27017
       - MongoSettings__DatabaseName=XliftenDB
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "5000:8080"   # API: http://localhost:5000
+      - "5000:8080"   # Swagger og direkte API: http://localhost:5000
 
   frontend:
     image: nginx:alpine
@@ -29,10 +28,12 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:80"     # Frontend: http://localhost:3000
+      - "3000:80"     # Movie Vault: http://localhost:3000
     volumes:
-      # Mapper din StaticFiles-mappe ind som Nginx document root
+      # HTML/CSS/JS
       - ./StaticFiles:/usr/share/nginx/html:ro
+      # Egen nginx-konfig
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
   mongo_data:

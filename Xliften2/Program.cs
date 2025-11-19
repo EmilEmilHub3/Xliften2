@@ -31,16 +31,6 @@ namespace Xliften2
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-            // 🚨 CORS – DEV MODE: tillad ALT (så vi er sikre det ikke er CORS der blokerer)
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                    policy
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
-            });
-
             // Authentication + Authorization
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -72,9 +62,6 @@ namespace Xliften2
                 app.UseSwaggerUI();
             }
 
-            // 🔹 Brug CORS FØR auth/authorization
-            app.UseCors();
-
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -86,15 +73,8 @@ namespace Xliften2
                 VideoSeeder.SeedAsync(db).Wait();
             }
 
-            // Static files – peg på mappen "StaticFiles"
-            var staticFilesPath = Path.Combine(builder.Environment.ContentRootPath, "StaticFiles");
-
-            app.UseFileServer(new FileServerOptions
-            {
-                FileProvider = new PhysicalFileProvider(staticFilesPath),
-                RequestPath = "/StaticFiles",
-                EnableDefaultFiles = true
-            });
+            // (StaticFiles bliver nu serveret af nginx, så vi behøver ikke UseFileServer her,
+            // men du kan sagtens lade det blive, hvis du vil)
 
             // Endpoints
             app.MapAuthEndpoints();   // /login

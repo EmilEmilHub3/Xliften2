@@ -6,8 +6,8 @@
     <link href="SimpleStyle.css" rel="stylesheet" />
 
     <script>
-        // API kører på http://localhost:5000 (mapped til containerens 8080)
-        const apiBase = "http://localhost:5000";
+        // Kald altid via /api – nginx sender det videre til .NET API'et
+        const apiBase = "/api";
         let jwtToken = null;
 
         document.addEventListener('DOMContentLoaded', function () {
