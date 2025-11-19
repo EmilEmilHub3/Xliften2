@@ -53,17 +53,17 @@ namespace Xliften2.Repositories
         /// Henter id + titel (filnavn) for alle videoer i GridFS.
         /// Bruges til at vise en liste i frontend.
         /// </summary>
-        public async Task<IReadOnlyList<VideoInfo>> GetAllVideosAsync()
+        public async Task<IReadOnlyList<VideoInfoDTO>> GetAllVideosAsync()
         {
             var filter = Builders<GridFSFileInfo>.Filter.Empty;
             var cursor = await _bucket.FindAsync(filter);
             var files = await cursor.ToListAsync();
 
-            var result = new List<VideoInfo>();
+            var result = new List<VideoInfoDTO>();
 
             foreach (var file in files)
             {
-                result.Add(new VideoInfo
+                result.Add(new VideoInfoDTO
                 {
                     Id = file.Id.ToString(),
                     Title = file.Filename

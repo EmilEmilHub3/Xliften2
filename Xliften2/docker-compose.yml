@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: xliften-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    container_name: xliften-api
+    depends_on:
+      - mongo
+    environment:
+      # Matcher dine MongoSettings i appsettings.json
+      - MongoSettings__ConnectionString=mongodb://mongo:27017
+      - MongoSettings__DatabaseName=XliftenDB
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+
+  frontend:
+    image: nginx:alpine
+    container_name: xliften-frontend
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+    volumes:
+      # Mapper din StaticFiles-mappe ind som Nginx document root
+      - ./StaticFiles:/usr/share/nginx/html:ro
+
+volumes:
+  mongo_data:
