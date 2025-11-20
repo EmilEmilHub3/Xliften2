@@ -4,21 +4,21 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
-using Xliften.Data;
-using Xliften.Models;
-using Xliften.Services.ServiceInterfaces;
+using Xliften2.Data;
+using Xliften2.Models;
+using Xliften2.Repositories;
 
-namespace Xliften.Services
+namespace Xliften2.Repositories
 {
     /// <summary>
     /// Service til at læse video-filer fra MongoDB GridFS.
     /// </summary>
-    public class GridFsVideoService : IGridFsVideoService
+    public class GridFsVideoRepository : IGridFsVideoRepository
     {
         private readonly IGridFSBucket _bucket;
 
         // ÆNDRING: nu får den MongoContext i stedet for IConfiguration
-        public GridFsVideoService(MongoContext context)
+        public GridFsVideoRepository(MongoContext context)
         {
             // Brug den fælles bucket fra context
             _bucket = context.VideosBucket;
@@ -53,17 +53,17 @@ namespace Xliften.Services
         /// Henter id + titel (filnavn) for alle videoer i GridFS.
         /// Bruges til at vise en liste i frontend.
         /// </summary>
-        public async Task<IReadOnlyList<VideoInfo>> GetAllVideosAsync()
+        public async Task<IReadOnlyList<VideoInfoDTO>> GetAllVideosAsync()
         {
             var filter = Builders<GridFSFileInfo>.Filter.Empty;
             var cursor = await _bucket.FindAsync(filter);
             var files = await cursor.ToListAsync();
 
-            var result = new List<VideoInfo>();
+            var result = new List<VideoInfoDTO>();
 
             foreach (var file in files)
             {
-                result.Add(new VideoInfo
+                result.Add(new VideoInfoDTO
                 {
                     Id = file.Id.ToString(),
                     Title = file.Filename

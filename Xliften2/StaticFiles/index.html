@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Movie Vault</title>
+    <link href="SimpleStyle.css" rel="stylesheet" />
+
+    <script>
+        // Kald altid via /api – nginx sender det videre til .NET API'et
+        const apiBase = "/api";
+        let jwtToken = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // -----------------------------
+            // LOGIN HANDLING
+            // -----------------------------
+            document.getElementById("btnLogin").onclick = async () => {
+
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
+
+                const response = await fetch(`${apiBase}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    alert("Login failed.");
+                    return;
+                }
+
+                const data = await response.json();
+                jwtToken = data.token;
+                localStorage.setItem("jwt", jwtToken);
+
+                alert("Login successful!");
+
+                await loadVideos();
+            };
+
+            // -----------------------------
+            // LOAD VIDEO LIST (requires token)
+            // -----------------------------
+            async function loadVideos() {
+
+                jwtToken = localStorage.getItem("jwt");
+
+                if (!jwtToken) {
+                    alert("You must login first.");
+                    return;
+                }
+
+                const response = await fetch(`${apiBase}/videos`, {
+                    headers: {
+                        "Authorization": "Bearer " + jwtToken
+                    }
+                });
+
+                if (!response.ok) {
+                    alert("Could not load videos. Unauthorized?");
+                    return;
+                }
+
+                const data = await response.json();
+                const select = document.getElementById('movielist');
+                select.innerHTML = '';
+
+                data.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.innerHTML = v.title;
+                    select.appendChild(opt);
+                });
+            }
+
+            // -----------------------------
+            // WATCH A VIDEO
+            // -----------------------------
+            document.getElementById("btnWatchMovie").onclick = async () => {
+                const id = document.getElementById("movielist").value;
+
+                if (!id) {
+                    alert("Choose a video first.");
+                    return;
+                }
+
+                const token = localStorage.getItem("jwt");
+                if (!token) {
+                    alert("Not logged in.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${apiBase}/video/` + encodeURIComponent(id), {
+                        headers: { "Authorization": "Bearer " + token }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Could not download video. Status " + response.status);
+                    }
+
+                    const blob = await response.blob();
+                    const videoUrl = URL.createObjectURL(blob);
+
+                    const player = document.getElementById("videoPlayer");
+                    player.src = videoUrl;
+                    player.play();
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error while loading video.");
+                }
+            };
+
+        });
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>The Video Vault</h1>
+
+        <!-- LOGIN -->
+        <div style="margin-bottom: 20px;">
+            <h2>Login</h2>
+            <input type="text" placeholder="username" id="username" />
+            <input type="password" placeholder="password" id="password" />
+            <button id="btnLogin">Login</button>
+        </div>
+
+        <!-- VIDEO LIST -->
+        <div>
+            <select id="movielist"></select>
+        </div>
+
+        <div>
+            <button class="button button1" id="btnWatchMovie">Watch movie</button>
+        </div>
+
+        <!-- VIDEO PLAYER -->
+        <div class="itemSpan2">
+            <video id="videoPlayer" width="650" controls autoplay>
+                <source type="video/mp4" />
+            </video>
+        </div>
+
+    </div>
+
+</body>
+</html>

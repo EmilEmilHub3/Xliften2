@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
-using Xliften.Data;
+using Xliften2.Data;
 
-namespace Xliften.Seeding
+namespace Xliften2.Seeding
 {
     /// <summary>
     /// Engangs-seeder til at lægge dine test-videoer ind i MongoDB GridFS.

@@ -1,27 +1,20 @@
 ﻿using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Xliften.Services.ServiceInterfaces;
+using Xliften2.Repositories;
 
-namespace Xliften.Endpoints
+namespace Xliften2.Endpoints
 {
-    /// <summary>
-    /// Endpoint-layer for video-relaterede endpoints i Xliften (Minimal API).
-    /// </summary>
     public static class VideoEndpoints
     {
-        /// <summary>
-        /// Registrerer video-endpoints på app'en.
-        /// </summary>
         public static IEndpointRouteBuilder MapVideoEndpoints(this IEndpointRouteBuilder app)
         {
-            // GET /video/{id}  -> streamer én video
-            app.MapGet("/video/{id}", async (string id, IGridFsVideoService videoService) =>
+            // ÅBENT streaming-endpoint (skal kunne kaldes direkte fra <video>-taget)
+            app.MapGet("/video/{id}", async (string id, IGridFsVideoRepository repo) =>
             {
                 try
                 {
-                    var (stream, contentType) = await videoService.GetVideoByIdAsync(id);
+                    var (stream, contentType) = await repo.GetVideoByIdAsync(id);
                     return Results.File(stream, contentType);
                 }
                 catch (FileNotFoundException)
@@ -29,16 +22,18 @@ namespace Xliften.Endpoints
                     return Results.NotFound($"No video found with id {id}");
                 }
             })
+            .RequireAuthorization()
             .WithName("StreamVideo")
             .WithSummary("Streamer en video direkte fra MongoDB GridFS.")
             .WithDescription("Brug ObjectId fra fs.files collection som id for at streame videoen.");
 
-            // GET /videos  -> returnerer liste af videoer (id + title)
-            app.MapGet("/videos", async (IGridFsVideoService videoService) =>
+            // BESKYTTET liste over videoer (kræver JWT-token)
+            app.MapGet("/videos", async (IGridFsVideoRepository repo) =>
             {
-                var videos = await videoService.GetAllVideosAsync();
+                var videos = await repo.GetAllVideosAsync();
                 return Results.Ok(videos);
             })
+            .RequireAuthorization()
             .WithName("VideoInfo")
             .WithSummary("Henter metadata for alle videoer fra MongoDB GridFS.")
             .WithDescription("Returnerer liste af videoer med id og title (filnavn), så frontend kan vælge film.");

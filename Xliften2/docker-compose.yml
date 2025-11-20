@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: xliften-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    container_name: xliften-api
+    depends_on:
+      - mongo
+    environment:
+      - MongoSettings__ConnectionString=mongodb://mongo:27017
+      - MongoSettings__DatabaseName=XliftenDB
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"   # Swagger og direkte API: http://localhost:5000
+
+  frontend:
+    image: nginx:alpine
+    container_name: xliften-frontend
+    depends_on:
+      - api
+    ports:
+      - "3000:80"     # Movie Vault: http://localhost:3000
+    volumes:
+      # HTML/CSS/JS
+      - ./StaticFiles:/usr/share/nginx/html:ro
+      # Egen nginx-konfig
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  mongo_data:
