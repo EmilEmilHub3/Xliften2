@@ -8,8 +8,16 @@ using Xliften2.Endpoints;
 using Xliften2.Repositories;
 using Xliften2.Seeding;
 
+// Author: Emil Riber Rosholm
+// Date: 2025-11-21
+
 namespace Xliften2
 {
+    /// <summary>
+    /// Application entry point for the Xliften API.
+    /// </summary>
+    /// <author>Emil Riber Rosholm</author>
+    /// <date>2025-11-21</date>
     public class Program
     {
         public static void Main(string[] args)
@@ -65,7 +73,7 @@ namespace Xliften2
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Seed admin-bruger og videoer
+            // Seed admin user and sample videos
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<MongoContext>();
@@ -73,14 +81,9 @@ namespace Xliften2
                 VideoSeeder.SeedAsync(db).Wait();
             }
 
-            // (StaticFiles bliver nu serveret af nginx, så vi behøver ikke UseFileServer her,
-            // men du kan sagtens lade det blive, hvis du vil)
-
             // Endpoints
             app.MapAuthEndpoints();   // /login
             app.MapVideoEndpoints();  // /videos + /video/{id}
-
-            app.MapGet("/", () => "Xliften API running");
 
             app.Run();
         }

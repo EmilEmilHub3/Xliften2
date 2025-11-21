@@ -1,27 +1,27 @@
-# BUILD-STAGE: bygger din .NET app
+# BUILD STAGE: build the .NET app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Kopiér projektfil og restore
+# Copy project file and restore
 COPY Xliften2.csproj ./
 RUN dotnet restore
 
-# Kopiér resten af koden
+# Copy the rest of the source code
 COPY . ./
 
-# Publish i Release til /app/publish
+# Publish in Release configuration to /app/publish
 RUN dotnet publish -c Release -o /app/publish
 
-# RUNTIME-STAGE: kørsel af appen
+# RUNTIME STAGE: run the app
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Kopiér den publish'ede app
+# Copy the published app from the build stage
 COPY --from=build /app/publish .
 
-# Lyt på port 8080 inde i containeren
+# Listen on port 8080 inside the container
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-# Din dll hedder Xliften2.dll (samme navn som csproj)
+# The application DLL is Xliften2.dll (same name as the csproj)
 ENTRYPOINT ["dotnet", "Xliften2.dll"]

@@ -5,11 +5,19 @@ using Xliften2.Repositories;
 
 namespace Xliften2.Endpoints
 {
+    /// <summary>
+    /// Extension methods for mapping video-related HTTP endpoints.
+    /// </summary>
     public static class VideoEndpoints
     {
+        /// <summary>
+        /// Registers endpoints for streaming a single video and retrieving video metadata list.
+        /// </summary>
+        /// <param name="app">The endpoint route builder to extend.</param>
+        /// <returns>The same <see cref="IEndpointRouteBuilder"/> for chaining.</returns>
         public static IEndpointRouteBuilder MapVideoEndpoints(this IEndpointRouteBuilder app)
         {
-            // ÅBENT streaming-endpoint (skal kunne kaldes direkte fra <video>-taget)
+            // Streaming endpoint (can be called directly from a <video> element).
             app.MapGet("/video/{id}", async (string id, IGridFsVideoRepository repo) =>
             {
                 try
@@ -24,10 +32,10 @@ namespace Xliften2.Endpoints
             })
             .RequireAuthorization()
             .WithName("StreamVideo")
-            .WithSummary("Streamer en video direkte fra MongoDB GridFS.")
-            .WithDescription("Brug ObjectId fra fs.files collection som id for at streame videoen.");
+            .WithSummary("Streams a video directly from MongoDB GridFS.")
+            .WithDescription("Use the ObjectId from the fs.files collection as the id to stream the video.");
 
-            // BESKYTTET liste over videoer (kræver JWT-token)
+            // Protected list of available videos (requires JWT token).
             app.MapGet("/videos", async (IGridFsVideoRepository repo) =>
             {
                 var videos = await repo.GetAllVideosAsync();
@@ -35,8 +43,8 @@ namespace Xliften2.Endpoints
             })
             .RequireAuthorization()
             .WithName("VideoInfo")
-            .WithSummary("Henter metadata for alle videoer fra MongoDB GridFS.")
-            .WithDescription("Returnerer liste af videoer med id og title (filnavn), så frontend kan vælge film.");
+            .WithSummary("Retrieves metadata for all videos from MongoDB GridFS.")
+            .WithDescription("Returns a list of videos with id and title (filename) so the frontend can choose a movie.");
 
             return app;
         }
