@@ -3,6 +3,7 @@ Xliften | Video Streaming System
 Xliften is a distributed video streaming application developed as part of a school assignment.
 The purpose of the system is to demonstrate how modern streaming platforms handle authentication, media storage, binary streaming, and separation of concerns using a service-based architecture.
 
+
 The system consists of three services:
 
 A .NET Minimal API
@@ -13,7 +14,8 @@ A static HTML/JavaScript frontend hosted on Nginx
 
 All services run together using Docker Compose, allowing the entire project to start with a single command.
 
-Objectives of the Project
+
+
 
 The project was designed to show:
 
@@ -26,6 +28,8 @@ How to build a simple client that communicates with a protected API
 How Docker Compose can be used to orchestrate multiple dependent services
 
 How to expose a clean and testable API with Swagger documentation
+
+
 
 Features:
 
@@ -41,6 +45,8 @@ Frontend that allows login, listing videos, and streaming them
 
 Postman test collection for validating endpoints and response times
 
+
+
 Technologies Used:
 
 .NET Minimal API
@@ -55,9 +61,9 @@ Vanilla JavaScript with HTML/CSS
 
 Postman for API testing
 
-Requirements
 
-To run the project:
+
+Requirements to run the project:
 
 Docker Desktop must be installed
 
@@ -108,12 +114,17 @@ GET /videos
 
 GET /video/{id}
 
+
+
 Default Login Credentials
 
 The system seeds a default user automatically when the database is empty:
 
 Username: admin
 Password: admin
+
+
+
 
 How Video Streaming Works
 
@@ -126,6 +137,9 @@ The frontend converts the response into a Blob and generates a temporary URL.
 This URL is inserted into the <video> element, allowing the browser to play the video.
 
 This approach bypasses the limitation that the <video> tag cannot send authorization headers directly.
+
+
+
 
 Postman Testing
 
