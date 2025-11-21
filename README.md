@@ -79,9 +79,11 @@ docker compose up --build
 
 This will start (Service/port/description):
 
-MongoDB / 27017 / Database storage
-API / 5000 / Swagger and backend API
-Frontend/ 3000 / User interface
+MongoDB / 27017 / Database storage.
+
+API / 5000 / Swagger and backend API.
+
+Frontend/ 3000 / User interface.
 
 Port mappings correspond to those defined in docker-compose.yml.
 
