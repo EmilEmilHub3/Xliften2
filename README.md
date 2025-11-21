@@ -1,37 +1,30 @@
 Xliften | Video Streaming System
 
-Xliften is a distributed video streaming application developed as part of a school assignment.
-The purpose of the system is to demonstrate how modern streaming platforms handle authentication, media storage, binary streaming, and separation of concerns using a service-based architecture.
-
+Xliften is a distributed video streaming system developed as part of a school assignment. The purpose of the project is to demonstrate how modern streaming platforms handle authentication, media storage, binary streaming, and separation of concerns using a service-based architecture.
 
 The system consists of three services:
 
 A .NET Minimal API
 
-A MongoDB database with GridFS
+A MongoDB database using GridFS
 
 A static HTML/JavaScript frontend hosted on Nginx
 
-All services run together using Docker Compose, allowing the entire project to start with a single command.
+All services run together using Docker Compose, allowing the entire system to start with a single command.
 
+The project demonstrates:
 
-
-
-The project was designed to show:
-
-How to store and stream large media files using MongoDB GridFS
+How to store and stream large media files with MongoDB GridFS
 
 How to secure an API using JWT authentication
 
-How to build a simple client that communicates with a protected API
+How to build a simple client that communicates with a protected backend
 
-How Docker Compose can be used to orchestrate multiple dependent services
+How Docker Compose can orchestrate multiple dependent services
 
-How to expose a clean and testable API with Swagger documentation
+How to expose a clean and testable API using Swagger
 
-
-
-Features:
+Main features:
 
 User login with JWT token generation
 
@@ -41,57 +34,49 @@ Video metadata retrieval
 
 Video streaming directly from GridFS
 
-Frontend that allows login, listing videos, and streaming them
+A frontend that supports login, video listing, and video playback
 
-Postman test collection for validating endpoints and response times
+A Postman test collection for verifying endpoints and response times
 
-
-
-Technologies Used:
+Technologies used:
 
 .NET Minimal API
 
 MongoDB with GridFS
 
-Nginx for hosting static frontend and proxying API calls
+Nginx for static hosting
 
 Docker and Docker Compose
 
-Vanilla JavaScript with HTML/CSS
+Vanilla JavaScript with HTML and CSS
 
 Postman for API testing
 
-
-
-Requirements to run the project:
+Requirements:
 
 Docker Desktop must be installed
 
-No other installations (such as MongoDB, .NET SDK, or Node.js) are required.
+No other installations are required (no .NET SDK, MongoDB, or Node.js)
 
-How to Run the System
+How to run the system:
 
 Open the project folder.
 
-Run the following command in the root of the project:
-
+Run the following command in the root directory:
 docker compose up --build
 
-This will start (Service/port/description):
+This will start the following services (service / port / description):
 
-MongoDB / 27017 / Database storage.
+MongoDB on port 27017 for database storage
 
-API / 5000 / Swagger and backend API.
+API on port 5000 for Swagger and backend endpoints
 
-Frontend/ 3000 / User interface.
+Frontend on port 3000 for the user interface
 
-Port mappings correspond to those defined in docker-compose.yml.
+The port mappings correspond to the configuration in docker-compose.yml.
 
-Accessing the Application
-Frontend
-
-Open:
-
+Accessing the frontend:
+Open the following URL in a browser:
 http://localhost:3000
 
 The frontend allows the user to:
@@ -100,15 +85,13 @@ Log in
 
 Load a list of available videos
 
-Play videos through a Blob-based streaming solution
+Play videos using a Blob-based streaming method
 
-API and Swagger
-
-Open:
-
+Accessing the API and Swagger:
+Open the following URL:
 http://localhost:5000/swagger
 
-Endpoints include:
+Available API endpoints include:
 
 POST /login
 
@@ -116,46 +99,30 @@ GET /videos
 
 GET /video/{id}
 
-
-
-Default Login Credentials
-
-The system seeds a default user automatically when the database is empty:
-
+Default login credentials:
+The system automatically seeds a default user when the database is empty.
 Username: admin
 Password: admin
 
+How video streaming works:
+The client sends a request to /api/video/{id} and includes a valid JWT token.
+The API streams the video directly from MongoDB GridFS.
+The frontend receives the stream as binary data, converts it into a Blob, and generates a temporary URL.
+This URL is then inserted into the HTML video element.
+This approach bypasses the limitation that the video tag cannot send Authorization headers.
 
-
-
-How Video Streaming Works
-
-The client requests a video through the endpoint /api/video/{id} while including a valid JWT token.
-
-The API reads the video from MongoDB GridFS as a stream.
-
-The frontend converts the response into a Blob and generates a temporary URL.
-
-This URL is inserted into the <video> element, allowing the browser to play the video.
-
-This approach bypasses the limitation that the <video> tag cannot send authorization headers directly.
-
-
-
-
-Postman Testing
-
-The project includes a Postman collection for testing:
+Postman testing:
+The project includes a Postman collection that allows testing of:
 
 Login
 
-Accessing protected endpoints
+Protected endpoints
 
-Retrieving metadata
+Metadata retrieval
 
-Streaming video content
+Video streaming
 
-Validating status codes and performance
+Status code validation and performance
 
-API KEY FOR POSTMAN: https://api.postman.com/collections/49455240-b332a679-bd02-454a-b6df-cc54055d0455?access_key=PMAT-01KAHM5DF5CGG6T37XN10EYZXE
-
+Postman API collection link (with API key):
+https://api.postman.com/collections/49455240-b332a679-bd02-454a-b6df-cc54055d0455?access_key=PMAT-01KAHM5DF5CGG6T37XN10EYZXE
